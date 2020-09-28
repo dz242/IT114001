@@ -29,8 +29,8 @@ public class NumberGuesserHW {
 	private void win() {
 		System.out.println("That's right!");
 		level++;// level up!
-		saveLevel();
 		strikes = 0;
+		saveLevel();
 		System.out.println("Welcome to level " + level);
 		number = getNumber(level);
 	}
@@ -50,6 +50,7 @@ public class NumberGuesserHW {
 	private void processCommands(String message) {
 		if (message.equalsIgnoreCase("quit")) {
 			System.out.println("Tired of playing? No problem, see you next time.");
+			saveLevel();
 			isRunning = false;
 		}
 	}
@@ -92,6 +93,8 @@ public class NumberGuesserHW {
 	private void saveLevel() {
 		try (FileWriter fw = new FileWriter(saveFile)) {
 			fw.write("" + level);// here we need to convert it to a String to record correctly
+			fw.write("\n" + number);
+			fw.write("\n" + strikes);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -106,6 +109,8 @@ public class NumberGuesserHW {
 		try (Scanner reader = new Scanner(file)) {
 			while (reader.hasNextLine()) {
 				int _level = reader.nextInt();
+				number = reader.nextInt();
+				strikes = reader.nextInt();
 				if (_level > 1) {
 					level = _level;
 					break;
@@ -129,7 +134,11 @@ public class NumberGuesserHW {
 			if (loadLevel()) {
 				System.out.println("Successfully loaded level " + level + " let's continue then");
 			}
-			number = getNumber(level);
+			if (number == 0) {
+				number = getNumber(level);
+			}
+			
+			
 			isRunning = true;
 			while (input.hasNext()) {
 				String message = input.nextLine();
