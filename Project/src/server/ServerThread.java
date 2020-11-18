@@ -1,7 +1,12 @@
+package server;
+
+import java.awt.Point;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -74,14 +79,46 @@ public class ServerThread extends Thread {
 		return sendPayload(payload);
 	}
 
-	protected boolean sendConnectionStatus(String clientName, boolean isConnect) {
+	protected boolean sendDirection(String clientName, Point dir) {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.SYNC_DIRECTION);
+		payload.setClientName(clientName);
+		payload.setPoint(dir);
+		return sendPayload(payload);
+	}
+
+	protected boolean sendPosition(String clientName, Point pos) {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.SYNC_POSITION);
+		payload.setClientName(clientName);
+		payload.setPoint(pos);
+		return sendPayload(payload);
+	}
+
+	protected boolean sendConnectionStatus(String clientName, boolean isConnect, String message) {
 		Payload payload = new Payload();
 		if (isConnect) {
 			payload.setPayloadType(PayloadType.CONNECT);
+			payload.setMessage(message);
 		} else {
 			payload.setPayloadType(PayloadType.DISCONNECT);
+			payload.setMessage(message);
 		}
 		payload.setClientName(clientName);
+		return sendPayload(payload);
+	}
+
+	protected boolean sendClearList() {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.CLEAR_PLAYERS);
+		return sendPayload(payload);
+	}
+
+	protected boolean sendRoom(String room) {
+		Payload payload = new Payload();
+		// using same payload type as a response trigger
+		payload.setPayloadType(PayloadType.GET_ROOMS);
+		payload.setMessage(room);
 		return sendPayload(payload);
 	}
 
@@ -120,6 +157,37 @@ public class ServerThread extends Thread {
 			break;
 		case MESSAGE:
 			currentRoom.sendMessage(this, p.getMessage());
+			break;
+		case CLEAR_PLAYERS:
+			// we currently don't need to do anything since the UI/Client won't be sending
+			// this
+			break;
+		case SYNC_DIRECTION:
+			currentRoom.sendDirectionSync(this, p.getPoint());
+			break;
+		case SYNC_POSITION:
+			// In my sample client will not be sharing their position
+			// this will be handled 100% by the server
+			break;
+		case GET_ROOMS:
+			// far from efficient but it works for example sake
+			List<String> roomNames = currentRoom.getRooms(p.getMessage());
+			Iterator<String> iter = roomNames.iterator();
+			while (iter.hasNext()) {
+				String room = iter.next();
+				if (room != null && !room.equalsIgnoreCase(currentRoom.getName())) {
+					if (!sendRoom(room)) {
+						// if an error occurs stop spamming
+						break;
+					}
+				}
+			}
+			break;
+		case CREATE_ROOM:
+			currentRoom.createRoom(p.getMessage(), this);
+			break;
+		case JOIN_ROOM:
+			currentRoom.joinRoom(p.getMessage(), this);
 			break;
 		default:
 			log.log(Level.INFO, "Unhandled payload on server: " + p);
