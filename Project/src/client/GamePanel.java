@@ -27,6 +27,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 	private static final long serialVersionUID = -1121202275148798015L;
 	List<Player> players;
 	Player myPlayer;
+	Bullet blt;
 	String playerUsername;// caching it so we don't lose it when room is wiped
 	private final static Logger log = Logger.getLogger(GamePanel.class.getName());
 
@@ -225,6 +226,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 
 		am.put("right_pressed", new MoveAction(KeyEvent.VK_D, true));
 		am.put("right_released", new MoveAction(KeyEvent.VK_D, false));
+
 	}
 
 	@Override
