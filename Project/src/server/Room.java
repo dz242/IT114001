@@ -12,16 +12,16 @@ public class Room implements AutoCloseable {
 	private String name;
 	private final static Logger log = Logger.getLogger(Room.class.getName());
 	Random ran = new Random();
-
+	private boolean isDM = false;
+	public String receiverName = null;
 	// Commands
 	private final static String COMMAND_TRIGGER = "/";
 	private final static String CREATE_ROOM = "createroom";
 	private final static String JOIN_ROOM = "joinroom";
 	private final static String ROLL = "roll";
 	private final static String FLIP = "flip";
-	private final static String BOLD = "*";
-	private final static String ITAL = "%";
-	private final static String UNDER = "_";
+	private final static String MUTE = "mute";
+	private final static String UNMUTE = "unmute";
 
 	public Room(String name) {
 		this.name = name;
@@ -36,6 +36,7 @@ public class Room implements AutoCloseable {
 	}
 
 	private List<ServerThread> clients = new ArrayList<ServerThread>();
+	private List<ServerThread> DMclients = new ArrayList<ServerThread>();
 
 	protected synchronized void addClient(ServerThread client) {
 		client.setCurrentRoom(this);
@@ -74,7 +75,7 @@ public class Room implements AutoCloseable {
 	protected synchronized void diceRoll(ServerThread client) {
 		int diceVal = ran.nextInt(6) + 1;
 		String res = String.valueOf(diceVal);
-		sendMessage(client, "has rolled the dice... and got a " + res + "!");
+		client.send(client.getClientName(), "<font color=green>has rolled the dice... and got a " + res + "!</font>");
 	}
 
 	protected synchronized void coinFlip(ServerThread client) {
@@ -86,11 +87,43 @@ public class Room implements AutoCloseable {
 			res = "tails";
 		}
 
-		sendMessage(client, "has flipped the coin... and got " + res + "!");
+		client.send(client.getClientName(), "<font color=blue>has flipped the coin... and got " + res + "!</font>");
 	}
 
-	protected synchronized void messageManip(String message) {
+	protected synchronized boolean DMCheck(String cname) {
+		if (receiverName == null) {
+			return false;
+		}
+		for (ServerThread client : clients) {
+			if (client.getClientName().equals(cname)) {
+				DMclients.add(client);
+				break;
+			}
+			isDM = true;
+		}
+		return isDM;
+	}
 
+	protected synchronized void muter(String name, ServerThread sender) {
+		for (ServerThread client : clients) {
+			if (client.getClientName().equals(name)) {
+				sender.mutedClients.add(client.getClientName());
+				boolean messageSent = client.send(sender.getClientName(), sender.getClientName() + " muted you...");
+				break;
+			}
+		}
+		return;
+	}
+
+	protected synchronized void unmuter(String name, ServerThread sender) {
+		for (ServerThread client : clients) {
+			if (client.getClientName().equals(name)) {
+				sender.mutedClients.remove(client.getClientName());
+				boolean messageSent = client.send(sender.getClientName(), sender.getClientName() + " unmuted you...");
+				break;
+			}
+		}
+		return;
 	}
 
 	private void cleanupEmptyRoom() {
@@ -122,8 +155,10 @@ public class Room implements AutoCloseable {
 	 * @param client  The sender of the message (since they'll be the ones
 	 *                triggering the actions)
 	 */
-	private boolean processCommands(String message, ServerThread client) {
-		boolean wasCommand = false;
+	private String processCommands(String message, ServerThread client) {
+		String rsp = null;
+		isDM = false;
+		receiverName = null;
 		try {
 			if (message.indexOf(COMMAND_TRIGGER) > -1) {
 				String[] comm = message.split(COMMAND_TRIGGER);
@@ -135,35 +170,114 @@ public class Room implements AutoCloseable {
 					command = command.toLowerCase();
 				}
 				String roomName;
+				String nameDec;
+				String name;
 				switch (command) {
 				case CREATE_ROOM:
 					roomName = comm2[1];
 					if (server.createNewRoom(roomName)) {
 						joinRoom(roomName, client);
 					}
-					wasCommand = true;
 					break;
 				case JOIN_ROOM:
 					roomName = comm2[1];
 					joinRoom(roomName, client);
-					wasCommand = true;
 					break;
 				case ROLL:
 					diceRoll(client);
-					wasCommand = true;
 					break;
 				case FLIP:
 					coinFlip(client);
-					wasCommand = true;
 					break;
+				case MUTE:
+					nameDec = comm2[1];
+					String[] nameTemp = nameDec.split("@");
+					name = nameTemp[1];
+					muter(name, client);
+					break;
+				case UNMUTE:
+					nameDec = comm2[1];
+					String[] nameTemp2 = nameDec.split("@");
+					name = nameTemp2[1];
+					unmuter(name, client);
+				}
+
+			}
+
+			else {
+				if (message.indexOf("@") == 0) {
+					String[] comm = message.split("@");
+					log.log(Level.INFO, message);
+					String part1 = comm[1];
+					String[] comm2 = part1.split(" ", 2);
+					String name = comm2[0];
+					message = comm2[1];
+					receiverName = name;
 
 				}
+
+				String workMessage = message;
+
+				if (workMessage.indexOf("~~") > -1) {
+					String[] splMessage = workMessage.split("~~");
+					String splPhrase = "";
+					splPhrase += splMessage[0];
+					for (int x = 1; x < splMessage.length; x++) {
+						if (x % 2 == 0) {
+							splPhrase += splMessage[x];
+						} else {
+							splPhrase += "<b>" + splMessage[x] + "</b>";
+						}
+					}
+					workMessage = splPhrase;
+				}
+				if (workMessage.indexOf("##") > -1) {
+					String[] splMessage = workMessage.split("##");
+					String splPhrase = "";
+					splPhrase += splMessage[0];
+					for (int x = 1; x < splMessage.length; x++) {
+						if (x % 2 == 0) {
+							splPhrase += splMessage[x];
+						} else {
+							splPhrase += "<i>" + splMessage[x] + "</i>";
+						}
+					}
+					workMessage = splPhrase;
+				}
+				if (workMessage.indexOf("__") > -1) {
+					String[] splMessage = workMessage.split("__");
+					String splPhrase = "";
+					splPhrase += splMessage[0];
+					for (int x = 1; x < splMessage.length; x++) {
+						if (x % 2 == 0) {
+							splPhrase += splMessage[x];
+						} else {
+							splPhrase += "<u>" + splMessage[x] + "</u>";
+						}
+					}
+					workMessage = splPhrase;
+				}
+				if (workMessage.indexOf(";r;") > -1) {
+					String[] splMessage = workMessage.split(";r;");
+					String splPhrase = "";
+					splPhrase += splMessage[0];
+					for (int x = 1; x < splMessage.length; x++) {
+						if (x % 2 == 0) {
+							splPhrase += splMessage[x];
+						} else {
+							splPhrase += "<font color=red>" + splMessage[x] + "</font>";
+						}
+					}
+					workMessage = splPhrase;
+				}
+
+				rsp = workMessage;
 
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return wasCommand;
+		return rsp;
 	}
 
 	// TODO changed from string to ServerThread
@@ -189,17 +303,35 @@ public class Room implements AutoCloseable {
 	 */
 	protected void sendMessage(ServerThread sender, String message) {
 		log.log(Level.INFO, getName() + ": Sending message to " + clients.size() + " clients");
-		if (processCommands(message, sender)) {
+		if (processCommands(message, sender) == null) {
 			// it was a command, don't broadcast
 			return;
-		}
-		Iterator<ServerThread> iter = clients.iterator();
-		while (iter.hasNext()) {
-			ServerThread client = iter.next();
-			boolean messageSent = client.send(sender.getClientName(), message);
-			if (!messageSent) {
-				iter.remove();
-				log.log(Level.INFO, "Removed client " + client.getId());
+		} else if (DMCheck(receiverName)) {
+			DMclients.add(sender);
+			Iterator<ServerThread> iter = DMclients.iterator();
+			while (iter.hasNext()) {
+				ServerThread dmclient = iter.next();
+				boolean messageSent = dmclient.send(sender.getClientName(), processCommands(message, sender));
+				if (!messageSent) {
+					iter.remove();
+					log.log(Level.INFO, "Removed client " + dmclient.getId());
+				}
+
+			}
+			DMclients.clear();
+			return;
+		} else {
+			Iterator<ServerThread> iter = clients.iterator();
+			while (iter.hasNext()) {
+				ServerThread client = iter.next();
+				if (!client.isMuted(sender.getClientName())) {
+					boolean messageSent = client.send(sender.getClientName(), processCommands(message, sender));
+					if (!messageSent) {
+						iter.remove();
+						log.log(Level.INFO, "Removed client " + client.getId());
+					}
+
+				}
 			}
 		}
 	}

@@ -207,6 +207,7 @@ public class ClientUI extends JFrame implements Event {
 
 	void addMessage(String str) {
 		JEditorPane entry = new JEditorPane();
+		entry.setContentType("text/html");
 		entry.setEditable(false);
 		entry.setLayout(null);
 		entry.setText(str);
@@ -285,7 +286,7 @@ public class ClientUI extends JFrame implements Event {
 	}
 
 	public static void main(String[] args) {
-		ClientUI ui = new ClientUI("My UI");
+		ClientUI ui = new ClientUI("Discord Lite");
 		if (ui != null) {
 			log.log(Level.FINE, "Started");
 		}
