@@ -84,6 +84,22 @@ public class ServerThread extends Thread {
 		return sendPayload(payload);
 	}
 
+	protected boolean sendMute(String muted) {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.MUTE);
+		payload.setClientName(muted);
+		log.log(Level.INFO, "Created MUTE payload");
+		return sendPayload(payload);
+	}
+
+	protected boolean sendUnmute(String unmuted) {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.UNMUTE);
+		payload.setClientName(unmuted);
+		log.log(Level.INFO, "Created UNMUTE payload");
+		return sendPayload(payload);
+	}
+
 	protected boolean sendConnectionStatus(String clientName, boolean isConnect, String message) {
 		Payload payload = new Payload();
 		if (isConnect) {
@@ -162,6 +178,8 @@ public class ServerThread extends Thread {
 				System.out.println("Received from client: " + fromClient);
 				processPayload(fromClient);
 			} // close while loop
+		} catch (IOException e) {
+
 		} catch (Exception e) {
 			// happens when client disconnects
 			e.printStackTrace();

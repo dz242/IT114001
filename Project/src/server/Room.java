@@ -14,6 +14,7 @@ public class Room implements AutoCloseable {
 	Random ran = new Random();
 	private boolean isDM = false;
 	public String receiverName = null;
+	private static client.Event event;
 	// Commands
 	private final static String COMMAND_TRIGGER = "/";
 	private final static String CREATE_ROOM = "createroom";
@@ -106,10 +107,13 @@ public class Room implements AutoCloseable {
 
 	protected synchronized void muter(String name, ServerThread sender) {
 		for (ServerThread client : clients) {
-			if (client.getClientName().equals(name)) {
-				sender.mutedClients.add(client.getClientName());
-				boolean messageSent = client.send(sender.getClientName(), sender.getClientName() + " muted you...");
-				break;
+			if (!sender.isMuted(name)) {
+				if (client.getClientName().equals(name)) {
+					sender.mutedClients.add(client.getClientName());
+					boolean messageSent = client.send(sender.getClientName(), sender.getClientName() + " muted you...");
+					sender.sendMute(client.getClientName());
+					break;
+				}
 			}
 		}
 		return;
@@ -117,10 +121,14 @@ public class Room implements AutoCloseable {
 
 	protected synchronized void unmuter(String name, ServerThread sender) {
 		for (ServerThread client : clients) {
-			if (client.getClientName().equals(name)) {
-				sender.mutedClients.remove(client.getClientName());
-				boolean messageSent = client.send(sender.getClientName(), sender.getClientName() + " unmuted you...");
-				break;
+			if (sender.isMuted(name)) {
+				if (client.getClientName().equals(name)) {
+					sender.mutedClients.remove(client.getClientName());
+					boolean messageSent = client.send(sender.getClientName(),
+							sender.getClientName() + " unmuted you...");
+					sender.sendUnmute(client.getClientName());
+					break;
+				}
 			}
 		}
 		return;
@@ -200,6 +208,7 @@ public class Room implements AutoCloseable {
 					String[] nameTemp2 = nameDec.split("@");
 					name = nameTemp2[1];
 					unmuter(name, client);
+					break;
 				}
 
 			}

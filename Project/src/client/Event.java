@@ -8,4 +8,8 @@ public interface Event {
 	void onMessageReceive(String clientName, String message);
 
 	void onChangeRoom();
+
+	void onMute(String clientName);
+
+	void onUnmute(String clientName);
 }

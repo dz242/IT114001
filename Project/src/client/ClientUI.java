@@ -32,6 +32,11 @@ public class ClientUI extends JFrame implements Event {
 	/**
 	 * 
 	 */
+	private static String muteName;
+	private static String unmuteName;
+	private static User muteClient;
+	private static User unmuteClient;
+
 	private static final long serialVersionUID = 1L;
 	CardLayout card;
 	ClientUI self;
@@ -183,6 +188,13 @@ public class ClientUI extends JFrame implements Event {
 		userPanel.repaint();
 	}
 
+	void replaceClient(String name, User client) {
+		addClient(name);
+		removeClient(client);
+
+		log.log(Level.INFO, "Completed replaceClient");
+	}
+
 	/***
 	 * Attempts to calculate the necessary dimensions for a potentially wrapped
 	 * string of text. This isn't perfect and some extra whitespace above or below
@@ -283,6 +295,50 @@ public class ClientUI extends JFrame implements Event {
 			removeClient(u);
 			iter.remove();
 		}
+	}
+
+	@Override
+	public void onMute(String clientName) {
+		// TODO Auto-generated method stub
+		log.log(Level.INFO, "Tiggered sendMute()");
+		Iterator<User> iter = users.iterator();
+		while (iter.hasNext()) {
+			// try {
+			String name = clientName;
+			User client = iter.next();
+			if (name.equals(client.getName())) {
+				muteName = client.getName();
+				muteClient = client;
+				log.log(Level.INFO, "Passed name check");
+			}
+			// } catch (ConcurrentModificationException e) {
+			// log.log(Level.INFO, "Caught ConcurrentModification");
+			// }
+		}
+		replaceClient("<font color=silver>" + muteName + " (muted)" + "</font>", muteClient);
+		log.log(Level.INFO, "Reached replaceClient");
+	}
+
+	@Override
+	public void onUnmute(String clientName) {
+		// TODO Auto-generated method stub
+		log.log(Level.INFO, "Tiggered sendUnmute()");
+		Iterator<User> iter = users.iterator();
+		while (iter.hasNext()) {
+			// try {
+			String name = clientName;
+			User client = iter.next();
+			if (name.equals(client.getName() + " (muted)")) {
+				unmuteName = client.getName();
+				unmuteClient = client;
+				log.log(Level.INFO, "Passed name check");
+			}
+			// } catch (ConcurrentModificationException e) {
+			// log.log(Level.INFO, "Caught ConcurrentModification");
+			// }
+		}
+		replaceClient("<font color=black>" + unmuteName + "</font>", unmuteClient);
+		log.log(Level.INFO, "Reached replaceClient");
 	}
 
 	public static void main(String[] args) {

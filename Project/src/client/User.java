@@ -3,18 +3,19 @@ package client;
 
 import java.awt.BorderLayout;
 
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 
 public class User extends JPanel {
 	private String name;
-	private JTextField nameField;
+	private JLabel nameField;
 
 	public User(String name) {
 		this.name = name;
-		nameField = new JTextField(name);
-		nameField.setEditable(false);
+		nameField = new JLabel("<html>" + name + "</html>");
 		this.setLayout(new BorderLayout());
+		this.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		this.add(nameField);
 	}
 
