@@ -197,17 +197,17 @@ public class Room implements AutoCloseable {
 				case FLIP:
 					coinFlip(client);
 					break;
-				case MUTE:
-					nameDec = comm2[1];
-					String[] nameTemp = nameDec.split("@");
-					name = nameTemp[1];
-					muter(name, client);
-					break;
 				case UNMUTE:
 					nameDec = comm2[1];
 					String[] nameTemp2 = nameDec.split("@");
 					name = nameTemp2[1];
 					unmuter(name, client);
+					break;
+				case MUTE:
+					nameDec = comm2[1];
+					String[] nameTemp = nameDec.split("@");
+					name = nameTemp[1];
+					muter(name, client);
 					break;
 				}
 
@@ -312,7 +312,8 @@ public class Room implements AutoCloseable {
 	 */
 	protected void sendMessage(ServerThread sender, String message) {
 		log.log(Level.INFO, getName() + ": Sending message to " + clients.size() + " clients");
-		if (processCommands(message, sender) == null) {
+		String resp = processCommands(message, sender);
+		if (resp == null) {
 			// it was a command, don't broadcast
 			return;
 		} else if (DMCheck(receiverName)) {
@@ -320,7 +321,7 @@ public class Room implements AutoCloseable {
 			Iterator<ServerThread> iter = DMclients.iterator();
 			while (iter.hasNext()) {
 				ServerThread dmclient = iter.next();
-				boolean messageSent = dmclient.send(sender.getClientName(), processCommands(message, sender));
+				boolean messageSent = dmclient.send(sender.getClientName(), resp);
 				if (!messageSent) {
 					iter.remove();
 					log.log(Level.INFO, "Removed client " + dmclient.getId());
@@ -334,7 +335,7 @@ public class Room implements AutoCloseable {
 			while (iter.hasNext()) {
 				ServerThread client = iter.next();
 				if (!client.isMuted(sender.getClientName())) {
-					boolean messageSent = client.send(sender.getClientName(), processCommands(message, sender));
+					boolean messageSent = client.send(sender.getClientName(), resp);
 					if (!messageSent) {
 						iter.remove();
 						log.log(Level.INFO, "Removed client " + client.getId());
