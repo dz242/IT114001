@@ -119,6 +119,8 @@ public class SocketClient {
 				event.onUnmute(p.getClientName());
 			}
 			break;
+		// If the payload is of type SAVE and event isn't null, we trigger onSave in
+		// ClientUI
 		case SAVE:
 			if (event != null) {
 				event.onSave();

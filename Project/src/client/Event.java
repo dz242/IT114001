@@ -13,5 +13,6 @@ public interface Event {
 
 	void onUnmute(String clientName);
 
+//In Event, onSave takes to the class where it is implemented, which is ClientUI
 	void onSave();
 }

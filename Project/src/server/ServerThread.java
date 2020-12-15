@@ -100,6 +100,8 @@ public class ServerThread extends Thread {
 		return sendPayload(payload);
 	}
 
+	// sendSave() creates a payload of type SAVE, this takes us to SocketClient's
+	// processPayloads()
 	protected boolean sendSave() {
 		Payload payload = new Payload();
 		payload.setPayloadType(PayloadType.SAVE);

@@ -32,6 +32,8 @@ public class Room implements AutoCloseable {
 	private final static String SAVEMUTE = "savemute";
 	private final static String LOADMUTE = "loadmute";
 
+	// SAVE contains the trigger word that is used later in the switch case
+
 	public Room(String name) {
 		this.name = name;
 	}
@@ -264,6 +266,8 @@ public class Room implements AutoCloseable {
 				case SAVE:
 					client.sendSave();
 					break;
+				// Here, when the word after the command trigger is "save", it runs the
+				// ServerThread method, sendSave()
 				case SAVEMUTE:
 					saveMute(client);
 					break;
