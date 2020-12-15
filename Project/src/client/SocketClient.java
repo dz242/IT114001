@@ -109,6 +109,7 @@ public class SocketClient {
 				event.onChangeRoom();
 			}
 			break;
+		// MUTE and UNMUTE's switch case statements just call their ClientUI methods
 		case MUTE:
 			if (event != null) {
 				event.onMute(p.getClientName());
@@ -119,6 +120,8 @@ public class SocketClient {
 				event.onUnmute(p.getClientName());
 			}
 			break;
+		// If the payload is of type SAVE and event isn't null, we trigger onSave in
+		// ClientUI
 		case SAVE:
 			if (event != null) {
 				event.onSave();

@@ -11,6 +11,12 @@ public class User extends JPanel {
 	private String name;
 	private JLabel nameField;
 
+	/*
+	 * User was changed to a JLabel in order to support HTML tags and color changes.
+	 * A new empty border was made to keep the text from sticking to the edge of the
+	 * panel.
+	 */
+
 	public User(String name) {
 		this.name = name;
 		nameField = new JLabel("<html>" + name + "</html>");

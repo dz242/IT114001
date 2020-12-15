@@ -32,6 +32,13 @@ public class Room implements AutoCloseable {
 	private final static String SAVEMUTE = "savemute";
 	private final static String LOADMUTE = "loadmute";
 
+	// SAVE contains the trigger word for saving chat history that is used later in
+	// the switch case
+	// SAVEMUTE contains the trigger word for saving a muted clients list that is
+	// used later in the switch case
+	// LOADMUTE contains the trigger word for loading a muted clients list that is
+	// used later in the switch case
+
 	public Room(String name) {
 		this.name = name;
 	}
@@ -113,6 +120,16 @@ public class Room implements AutoCloseable {
 		return isDM;
 	}
 
+	/*
+	 * In order to let the muted person know they are muted, we send them a standard
+	 * message from the person who muted after we have added them to the
+	 * mutedClients ArrayList
+	 */
+
+	/*
+	 * When someone is successfully muted, we call sendMute() from ServerThread,
+	 * passing in the muted client's name
+	 */
 	protected synchronized void muter(String name, ServerThread sender) {
 		for (ServerThread client : clients) {
 			if (!sender.isMuted(name)) {
@@ -126,6 +143,17 @@ public class Room implements AutoCloseable {
 		}
 		return;
 	}
+
+	/*
+	 * The same goes for the unmuter as well, just the opposite. We send a message
+	 * letting them know they are unmuted after taking them off of the mutedCLients
+	 * list
+	 */
+
+	/*
+	 * When someone is successfully unmuted, we call sendUnmute() from ServerThread,
+	 * passing in the unmuted client's name
+	 */
 
 	protected synchronized void unmuter(String name, ServerThread sender) {
 		for (ServerThread client : clients) {
@@ -141,6 +169,13 @@ public class Room implements AutoCloseable {
 		}
 		return;
 	}
+
+	/*
+	 * saveMute first creates a text file in the project folder. It then writes in
+	 * the client's name using the iterator from the mutedClients ArrayList. This,
+	 * like the Chat History file, is overwritten the next time /savemute is used.
+	 * Spaces are added to have something to split each client up later in loadMute
+	 */
 
 	protected synchronized void saveMute(ServerThread client) {
 		try {
@@ -159,6 +194,16 @@ public class Room implements AutoCloseable {
 			e.printStackTrace();
 		}
 	}
+
+	/*
+	 * loadMute is an overly complicated way of taking client names and putting them
+	 * back on in a muted clients list. First we find the file and attach Scanner s
+	 * to it. Then we check the next line and put it into an array, where it is
+	 * split by their spaces. We then go through each name in the array, AND THEN
+	 * iterate through the list of clients. If the names of both match, the client's
+	 * name is added to the muted list, and finally we send a message letting them
+	 * know they are muted.
+	 */
 
 	protected synchronized void loadMute(ServerThread client) {
 		try {
@@ -264,6 +309,8 @@ public class Room implements AutoCloseable {
 				case SAVE:
 					client.sendSave();
 					break;
+				// Here, when the word after the command trigger is "save", it runs the
+				// ServerThread method, sendSave()
 				case SAVEMUTE:
 					saveMute(client);
 					break;
