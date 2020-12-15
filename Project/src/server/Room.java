@@ -32,7 +32,12 @@ public class Room implements AutoCloseable {
 	private final static String SAVEMUTE = "savemute";
 	private final static String LOADMUTE = "loadmute";
 
-	// SAVE contains the trigger word that is used later in the switch case
+	// SAVE contains the trigger word for saving chat history that is used later in
+	// the switch case
+	// SAVEMUTE contains the trigger word for saving a muted clients list that is
+	// used later in the switch case
+	// LOADMUTE contains the trigger word for loading a muted clients list that is
+	// used later in the switch case
 
 	public Room(String name) {
 		this.name = name;
@@ -155,6 +160,13 @@ public class Room implements AutoCloseable {
 		return;
 	}
 
+	/*
+	 * saveMute first creates a text file in the project folder. It then writes in
+	 * the client's name using the iterator from the mutedClients ArrayList. This,
+	 * like the Chat History file, is overwritten the next time /savemute is used.
+	 * Spaces are added to have something to split each client up later in loadMute
+	 */
+
 	protected synchronized void saveMute(ServerThread client) {
 		try {
 			File f = new File("MuteList.txt");
@@ -172,6 +184,16 @@ public class Room implements AutoCloseable {
 			e.printStackTrace();
 		}
 	}
+
+	/*
+	 * loadMute is an overly complicated way of taking client names and putting them
+	 * back on in a muted clients list. First we find the file and attach Scanner s
+	 * to it. Then we check the next line and put it into an array, where it is
+	 * split by their spaces. We then go through each name in the array, AND THEN
+	 * iterate through the list of clients. If the names of both match, the client's
+	 * name is added to the muted list, and finally we send a message letting them
+	 * know they are muted.
+	 */
 
 	protected synchronized void loadMute(ServerThread client) {
 		try {
