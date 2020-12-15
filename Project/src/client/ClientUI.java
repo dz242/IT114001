@@ -208,6 +208,14 @@ public class ClientUI extends JFrame implements Event {
 		}
 	}
 
+	/*
+	 * chatFile() creates a file in the project folder, StringBuilder sb takes in
+	 * the components of the JEditorPane to extract every message currently in the
+	 * chat, w, the FileWriter, writes in the results of StringBuilder sb, the
+	 * 'false' parameter in FileWriter makes it so that it overwrites the file every
+	 * time /save is used
+	 */
+
 	void chatFile() {
 		try {
 			File f = new File("Chat.txt");
@@ -229,9 +237,9 @@ public class ClientUI extends JFrame implements Event {
 			}
 		}
 		try {
-			FileWriter myWriter = new FileWriter("Chat.txt", false);
-			myWriter.write(sb.toString());
-			myWriter.close();
+			FileWriter w = new FileWriter("Chat.txt", false);
+			w.write(sb.toString());
+			w.close();
 			log.log(Level.INFO, "Wrote to Chat.txt");
 		} catch (IOException e) {
 			log.log(Level.INFO, "Something ain't right");
