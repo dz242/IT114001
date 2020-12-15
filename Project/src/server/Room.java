@@ -125,6 +125,11 @@ public class Room implements AutoCloseable {
 	 * message from the person who muted after we have added them to the
 	 * mutedClients ArrayList
 	 */
+
+	/*
+	 * When someone is successfully muted, we call sendMute() from ServerThread,
+	 * passing in the muted client's name
+	 */
 	protected synchronized void muter(String name, ServerThread sender) {
 		for (ServerThread client : clients) {
 			if (!sender.isMuted(name)) {
@@ -143,6 +148,11 @@ public class Room implements AutoCloseable {
 	 * The same goes for the unmuter as well, just the opposite. We send a message
 	 * letting them know they are unmuted after taking them off of the mutedCLients
 	 * list
+	 */
+
+	/*
+	 * When someone is successfully unmuted, we call sendUnmute() from ServerThread,
+	 * passing in the unmuted client's name
 	 */
 
 	protected synchronized void unmuter(String name, ServerThread sender) {

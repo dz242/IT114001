@@ -84,6 +84,13 @@ public class ServerThread extends Thread {
 		return sendPayload(payload);
 	}
 
+	/*
+	 * Both sendMute() and sendUnmute() create their own respective payloads with
+	 * their own types. This was done in order to differentiate them because their
+	 * client-side methods have slight differences. After the payload is sent, it
+	 * processed in SocketClient's processPayload().
+	 */
+
 	protected boolean sendMute(String muted) {
 		Payload payload = new Payload();
 		payload.setPayloadType(PayloadType.MUTE);

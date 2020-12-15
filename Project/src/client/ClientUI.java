@@ -195,10 +195,19 @@ public class ClientUI extends JFrame implements Event {
 		userPanel.repaint();
 	}
 
+	/*
+	 * replaceClient() is what ties this whole thing together. This was made to
+	 * carry out visual changes to text in the User List Panel. It does this by
+	 * first removing the old User from the list and adding in the same User with
+	 * their modifications made by the methods that call replaceClient(). Ingenious
+	 */
+
 	void replaceClient(String name, User client) {
 		if (name != null && client != null) {
+
 			removeClient(client);
 			log.log(Level.INFO, "removed client");
+
 			addClient(name);
 			log.log(Level.INFO, "added client");
 
@@ -339,6 +348,18 @@ public class ClientUI extends JFrame implements Event {
 		chatFile();
 	}
 
+	/*
+	 * In order to highlight the last person who sent a message, we have to first
+	 * un-highlight the previous last person to send a message. We set the
+	 * background back to light gray after checking to make sure nothing is null,
+	 * which it would be if this is the first time someone sent a message. We then
+	 * iterate through the Users and check if the person who sent this message
+	 * matches their names. If so, we set their background to orange, and then we
+	 * set them as the lastMessUser to make sure they are un-highlighted after the
+	 * next message comes in. Any attempted messages from muted clients will not set
+	 * off this method.
+	 */
+
 	@Override
 	public void onMessageReceive(String clientName, String message) {
 		log.log(Level.INFO, "Last Messenger: " + lastMessName);
@@ -374,6 +395,15 @@ public class ClientUI extends JFrame implements Event {
 			iter.remove();
 		}
 	}
+	/*
+	 * onMute() first compares the clientName that was passed in to the list of
+	 * User's names. If there is a match, we take the muted client and its name, add
+	 * in some HTML to make it gray, and send those to replaceClient(). I used
+	 * global variables because I can't modify while I'm iterating through the
+	 * ArrayList, as you could see by the commented out try/catch statements. I
+	 * tried band-aid patching but it didn't work, so I just said fuhgeddaboutit and
+	 * made global variables.
+	 */
 
 	@Override
 	public void onMute(String clientName) {
@@ -396,6 +426,15 @@ public class ClientUI extends JFrame implements Event {
 		replaceClient("<font color=silver>" + muteName + "</font>", muteClient);
 		log.log(Level.INFO, "Reached replaceClient with " + muteName + " and " + muteClient.getName());
 	}
+
+	/*
+	 * onUnmute() just does the opposite. This time, it checks the User's name
+	 * against the clientName with HTML tags attached to them to make sure they are
+	 * equal, and then sends just clientName and User to replaceClient(). This was
+	 * made before I found out you can manipulate text color with JPanel methods,
+	 * and I am too stubborn to change it back, so I just saved it for the
+	 * Last-Message-Highlight part
+	 */
 
 	@Override
 	public void onUnmute(String clientName) {

@@ -109,6 +109,7 @@ public class SocketClient {
 				event.onChangeRoom();
 			}
 			break;
+		// MUTE and UNMUTE's switch case statements just call their ClientUI methods
 		case MUTE:
 			if (event != null) {
 				event.onMute(p.getClientName());
