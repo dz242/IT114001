@@ -7,7 +7,6 @@ gitremastered.md
 
 target/**
 
-*.jar
 *.war
 *.ear
 *.class
