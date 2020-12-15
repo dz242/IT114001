@@ -2,12 +2,15 @@ package client;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -36,6 +39,10 @@ public class ClientUI extends JFrame implements Event {
 	private static String unmuteName;
 	private static User muteClient;
 	private static User unmuteClient;
+	private static User messUser;
+	private static String messName;
+	private static User lastMessUser;
+	private static String lastMessName;
 
 	private static final long serialVersionUID = 1L;
 	CardLayout card;
@@ -189,10 +196,47 @@ public class ClientUI extends JFrame implements Event {
 	}
 
 	void replaceClient(String name, User client) {
-		addClient(name);
-		removeClient(client);
+		if (name != null && client != null) {
+			removeClient(client);
+			log.log(Level.INFO, "removed client");
+			addClient(name);
+			log.log(Level.INFO, "added client");
 
-		log.log(Level.INFO, "Completed replaceClient");
+			log.log(Level.INFO, "Completed replaceClient");
+		} else {
+			log.log(Level.INFO, "Failed replaceClient");
+		}
+	}
+
+	void chatFile() {
+		try {
+			File f = new File("Chat.txt");
+			if (f.createNewFile()) {
+				log.log(Level.INFO, "Created a chat file " + f.getName());
+			} else {
+				log.log(Level.INFO, "Chat file already exists...");
+			}
+		} catch (IOException e) {
+			log.log(Level.INFO, "Something ain't right");
+			e.printStackTrace();
+		}
+		StringBuilder sb = new StringBuilder();
+		Component[] comps = textArea.getComponents();
+		for (Component x : comps) {
+			JEditorPane e = (JEditorPane) x;
+			if (x != null) {
+				sb.append(e.getText() + System.lineSeparator());
+			}
+		}
+		try {
+			FileWriter myWriter = new FileWriter("Chat.txt", false);
+			myWriter.write(sb.toString());
+			myWriter.close();
+			log.log(Level.INFO, "Wrote to Chat.txt");
+		} catch (IOException e) {
+			log.log(Level.INFO, "Something ain't right");
+			e.printStackTrace();
+		}
 	}
 
 	/***
@@ -282,7 +326,33 @@ public class ClientUI extends JFrame implements Event {
 	}
 
 	@Override
+	public void onSave() {
+		// TODO Auto-generated method stub
+		chatFile();
+	}
+
+	@Override
 	public void onMessageReceive(String clientName, String message) {
+		log.log(Level.INFO, "Last Messenger: " + lastMessName);
+		if (lastMessUser != null && lastMessName != null) {
+			lastMessUser.setBackground(Color.lightGray);
+			lastMessUser.setOpaque(false);
+		}
+		Iterator<User> iter = users.iterator();
+		while (iter.hasNext()) {
+			User u = iter.next();
+			if (u.getName().equals(clientName)) {
+				messUser = u;
+				messName = clientName;
+			}
+		}
+		messUser.setBackground(Color.orange);
+		messUser.setOpaque(true);
+
+		log.log(Level.INFO, "Current Messenger: " + messName + ", Last Messenger: " + lastMessName);
+		lastMessUser = messUser;
+		lastMessName = messName;
+
 		log.log(Level.INFO, String.format("%s: %s", clientName, message));
 		self.addMessage(String.format("%s: %s", clientName, message));
 	}
@@ -315,8 +385,8 @@ public class ClientUI extends JFrame implements Event {
 			// log.log(Level.INFO, "Caught ConcurrentModification");
 			// }
 		}
-		replaceClient("<font color=silver>" + muteName + " (muted)" + "</font>", muteClient);
-		log.log(Level.INFO, "Reached replaceClient");
+		replaceClient("<font color=silver>" + muteName + "</font>", muteClient);
+		log.log(Level.INFO, "Reached replaceClient with " + muteName + " and " + muteClient.getName());
 	}
 
 	@Override
@@ -326,10 +396,10 @@ public class ClientUI extends JFrame implements Event {
 		Iterator<User> iter = users.iterator();
 		while (iter.hasNext()) {
 			// try {
-			String name = clientName;
+			String name = "<font color=silver>" + clientName + "</font>";
 			User client = iter.next();
-			if (name.equals(client.getName() + " (muted)")) {
-				unmuteName = client.getName();
+			if (name.equals(client.getName())) {
+				unmuteName = clientName;
 				unmuteClient = client;
 				log.log(Level.INFO, "Passed name check");
 			}
@@ -337,8 +407,8 @@ public class ClientUI extends JFrame implements Event {
 			// log.log(Level.INFO, "Caught ConcurrentModification");
 			// }
 		}
-		replaceClient("<font color=black>" + unmuteName + "</font>", unmuteClient);
-		log.log(Level.INFO, "Reached replaceClient");
+		replaceClient(unmuteName, unmuteClient);
+		log.log(Level.INFO, "Reached replaceClient with " + unmuteName + " and " + unmuteClient.getName());
 	}
 
 	public static void main(String[] args) {
@@ -347,4 +417,5 @@ public class ClientUI extends JFrame implements Event {
 			log.log(Level.FINE, "Started");
 		}
 	}
+
 }

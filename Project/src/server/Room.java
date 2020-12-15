@@ -1,9 +1,14 @@
 package server;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,6 +28,9 @@ public class Room implements AutoCloseable {
 	private final static String FLIP = "flip";
 	private final static String MUTE = "mute";
 	private final static String UNMUTE = "unmute";
+	private final static String SAVE = "save";
+	private final static String SAVEMUTE = "savemute";
+	private final static String LOADMUTE = "loadmute";
 
 	public Room(String name) {
 		this.name = name;
@@ -134,6 +142,50 @@ public class Room implements AutoCloseable {
 		return;
 	}
 
+	protected synchronized void saveMute(ServerThread client) {
+		try {
+			File f = new File("MuteList.txt");
+			f.createNewFile();
+			FileWriter w = new FileWriter("MuteList.txt", false);
+			Iterator<String> iter = client.mutedClients.iterator();
+			while (iter.hasNext()) {
+				String clientName = iter.next();
+				w.write(clientName + " ");
+			}
+			w.close();
+
+		} catch (IOException e) {
+			log.log(Level.INFO, "Something happened");
+			e.printStackTrace();
+		}
+	}
+
+	protected synchronized void loadMute(ServerThread client) {
+		try {
+			String[] clientArray;
+			File f = new File("MuteList.txt");
+			Scanner s = new Scanner(f);
+			while (s.hasNextLine()) {
+				clientArray = s.nextLine().split(" ");
+				for (String cName : clientArray) {
+					for (ServerThread c : clients) {
+						client.mutedClients.add(cName);
+						if (cName.equals(c.getClientName())) {
+							boolean messageSent = c.send(client.getClientName(),
+									client.getClientName() + " muted you...");
+							client.sendMute(c.getClientName());
+						}
+					}
+
+				}
+			}
+			s.close();
+		} catch (FileNotFoundException e) {
+			System.out.println("An error occurred.");
+			e.printStackTrace();
+		}
+	}
+
 	private void cleanupEmptyRoom() {
 		// If name is null it's already been closed. And don't close the Lobby
 		if (name == null || name.equalsIgnoreCase(SocketServer.LOBBY)) {
@@ -209,8 +261,16 @@ public class Room implements AutoCloseable {
 					name = nameTemp[1];
 					muter(name, client);
 					break;
+				case SAVE:
+					client.sendSave();
+					break;
+				case SAVEMUTE:
+					saveMute(client);
+					break;
+				case LOADMUTE:
+					loadMute(client);
+					break;
 				}
-
 			}
 
 			else {

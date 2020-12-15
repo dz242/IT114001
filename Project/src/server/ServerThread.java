@@ -100,6 +100,13 @@ public class ServerThread extends Thread {
 		return sendPayload(payload);
 	}
 
+	protected boolean sendSave() {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.SAVE);
+		log.log(Level.INFO, "Created SAVE payload");
+		return sendPayload(payload);
+	}
+
 	protected boolean sendConnectionStatus(String clientName, boolean isConnect, String message) {
 		Payload payload = new Payload();
 		if (isConnect) {

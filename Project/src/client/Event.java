@@ -12,4 +12,6 @@ public interface Event {
 	void onMute(String clientName);
 
 	void onUnmute(String clientName);
+
+	void onSave();
 }

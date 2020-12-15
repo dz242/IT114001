@@ -113,9 +113,15 @@ public class SocketClient {
 			if (event != null) {
 				event.onMute(p.getClientName());
 			}
+			break;
 		case UNMUTE:
 			if (event != null) {
 				event.onUnmute(p.getClientName());
+			}
+			break;
+		case SAVE:
+			if (event != null) {
+				event.onSave();
 			}
 			break;
 		default:
